@@ -4,17 +4,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5183",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@kestra-io/ui-libs": "^0.0.37",
+    "bootstrap": "^5.3.3",
+    "element-plus": "^2.5.6",
+    "nprogress": "^0.2.0",
     "vue": "^3.4.21",
+    "vue-sidebar-menu": "^5.3.1",
+    "vue-material-design-icons": "^5.3.0",
+    "vuex": "^4.1.0",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
     "@vitejs/plugin-vue-jsx": "^3.1.0",
+    "sass": "^1.71.1",
     "vite": "^5.1.5"
   }
 }
