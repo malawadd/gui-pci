@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import {  List, ListItem } from './CustomList';
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableHeader,
+    TableFooter,
+    TableHead,
+    TableRow,
+  } from "@/components/ui/table";
+  import { Input } from "@/components/ui/input"
 
 const AddGenerator = () => {
   const [addresses, setAddresses] = useState([]);
   const [addressData, setAddressData] = useState([]); // Use an array for simplicity
   const [publicKeyCache, setPublicKeyCache] = useState({});
+  const [newAddress, setNewAddress] = useState("");
 
   const generateAddress = async () => {
     // if (addresses.length >= 10) return; // Limit to 3 addresses
@@ -18,6 +30,13 @@ const AddGenerator = () => {
         { address, publicKey: null } // Add address with empty key placeholder 
       ]);
 
+  };
+
+  const handleManualAddition = (newAddress) => {
+    setAddressData([
+      ...addressData,
+      { address: newAddress, publicKey: null } // Initialize publicKey to null
+    ]);
   };
 
 
@@ -57,21 +76,38 @@ const togglePublicKey = async (address) => {
 
   return (
     <>
-      <Button onClick={generateAddress}>Generate Address</Button>
-      {addresses.length >= 0 && (
-        <List>
-        {addressData.map(({ address, publicKey }) => ( 
-  <ListItem key={address}> 
-    {address} - Balance: {/* ... */}
-    <Button onClick={() => togglePublicKey(address)}>
-      {publicKey ? "Hide Public Key" : "Show Public Key"}
-    </Button>
-    {publicKey && <p>{publicKey}</p>} 
-  </ListItem>
-))} 
-      </List>
-      )}
-    </>
+    <Button onClick={generateAddress}>Generate Address</Button>
+    <div className="flex w-full max-w-sm items-center space-x-2">
+    <Input
+          type="text"
+          placeholder="Enter address"
+          onChange={(e) => setNewAddress(e.target.value)}
+        />
+        <Button onClick={() => handleManualAddition(newAddress)}>Add Address</Button>
+        </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Address</TableHead>
+          <TableHead>Public Key</TableHead>
+          <TableHead>Action</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {addressData.map(({ address, publicKey }) => (
+          <TableRow key={address}>
+            <TableCell>{address}</TableCell>
+            <TableCell>{publicKey && <p>{publicKey}</p>}</TableCell>
+            <TableCell>
+              <Button onClick={() => togglePublicKey(address)}>
+                {publicKey ? "Hide Public Key" : "Show Public Key"}
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </>
   );
 };
 
