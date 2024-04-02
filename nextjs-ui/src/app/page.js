@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import AddGenerator from './components/AddGenerator';
-
+import SubnetCreator from './components/SubnetCreator';
 
 function SubnetManagementUI() {
   const [subnets, setSubnets] = useState([]);
@@ -68,6 +68,7 @@ function SubnetManagementUI() {
         </div>
       </div>
       <AddGenerator />
+      <SubnetCreator />
     </div>
   );
 }

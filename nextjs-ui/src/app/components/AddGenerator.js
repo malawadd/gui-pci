@@ -12,10 +12,11 @@ import {
     TableRow,
   } from "@/components/ui/table";
   import { Input } from "@/components/ui/input"
+  import { useAddresses } from '../contexts/AddressContext';
 
 const AddGenerator = () => {
   const [addresses, setAddresses] = useState([]);
-  const [addressData, setAddressData] = useState([]); // Use an array for simplicity
+  const { addressData, setAddressData } = useAddresses();
   const [publicKeyCache, setPublicKeyCache] = useState({});
   const [newAddress, setNewAddress] = useState("");
 
@@ -23,7 +24,9 @@ const AddGenerator = () => {
     // if (addresses.length >= 10) return; // Limit to 3 addresses
 
     const response = await fetch('http://localhost:3100/generate-eth-address');
-    const  address  = await response.text();
+    const  addressWithQuotes  = await response.text();
+    const trimmedAddress = addressWithQuotes.trim();
+  const address = trimmedAddress.replace(/^"|"$/g, '');
     // setAddresses([...addresses, address]);
     setAddressData([
         ...addressData, 
@@ -56,7 +59,8 @@ const togglePublicKey = async (address) => {
     } else {
       // If the public key is not cached, fetch it from the server
       const response = await fetch(`http://localhost:3100/generate-public-address?ethAddress=${address}`);
-      const publicKey = await response.text();
+      const publicKeyWithQuotes = await response.text(); // Get the response as text
+      const publicKey = publicKeyWithQuotes.replace(/^"|"$/g, ''); // Remove quotes at the start and end
 
       setAddressData(prevData => prevData.map((item, idx) => {
         if (idx === targetIndex) {

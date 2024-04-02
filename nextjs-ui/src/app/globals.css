@@ -74,3 +74,67 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+/* Apply a consistent base style for inputs, selects, and buttons */
+.input, .select, .button {
+  height: 2.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  padding: 0 1rem;
+}
+
+/* Style for buttons */
+.button {
+  background-color: #0053ba;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #003d8a;
+}
+
+/* Table styling */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+}
+
+.table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Spacing around form elements */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .input, .select, .button {
+    width: 100%;
+    box-sizing: border-box; /* Make sure padding doesn't affect overall width */
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
