@@ -101,7 +101,7 @@ const togglePublicKey = async (address) => {
         {addressData.map(({ address, publicKey }) => (
           <TableRow key={address}>
             <TableCell>{address}</TableCell>
-            <TableCell>{publicKey && <p>{publicKey}</p>}</TableCell>
+            <TableCell className="break-words max-w-xs" >{publicKey && <p>{publicKey}</p>}</TableCell>
             <TableCell>
               <Button onClick={() => togglePublicKey(address)}>
                 {publicKey ? "Hide Public Key" : "Show Public Key"}
