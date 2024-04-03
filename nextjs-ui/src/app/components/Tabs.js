@@ -9,7 +9,22 @@ const Tabs = () => {
   const renderNote = () => {
     switch (activeTab) {
       case 'address':
-        return 'Add or generate IPC address to use with the subnets.';
+        return (
+            <>
+              <p>Add or generate IPC address to use with the subnets.</p>
+              <p>
+                Fund your address from the{' '}
+                <a
+                  href="https://faucet.calibnet.chainsafe-fil.io/funds.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-yellow-500 hover:text-yellow-700"
+                >
+                  faucet
+                </a>.
+              </p>
+            </>
+          );
       case 'subnet':
         return 'Create subnet by choosing the primary wallet that will connect to the subnet.';
       default:

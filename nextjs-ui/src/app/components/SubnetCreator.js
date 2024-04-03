@@ -90,14 +90,15 @@ const { addressData, subnetData, setSubnetData } = useAddresses();
       <Button onClick={createSubnet}>Create Subnet</Button>
       
       {/* Input for manual subnet ID addition */}
-      <div>
+      
+      <div className="mt-4">
         <Input
           type="text"
           value={manualSubnetId}
           onChange={(e) => setManualSubnetId(e.target.value)}
-          placeholder="Manual Subnet ID"
+          placeholder="Supply Subnet ID if one Already Created"
         />
-        <Button onClick={handleManualAddition}>Add Manual Subnet</Button>
+        <Button className="mt-2" onClick={handleManualAddition}>Add Manual Subnet</Button>
       </div>
 
       <Table>
