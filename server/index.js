@@ -5,6 +5,10 @@ const PORT = process.env.PORT || 3100;
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const util = require('util');
+const execPromise = util.promisify(require('child_process').exec);
+const { parseNodeOutput } = require('./parseNodeOutput');
+
 
 app.use(cors());
 app.use(express.json()); // Add this line to parse JSON bodies
@@ -22,17 +26,28 @@ app.get('/add-wasm-target', (req, res) => {
 });
 
 app.get('/clone-repo', (req, res) => {
-  console.log(`cloning IPC repo...`);
-  exec('git clone https://github.com/consensus-shipyard/ipc.git', (error, stdout) => {
-    
-    if (error) {
-      console.error(`Error cloning repo: ${error.message}`);
-      return res.status(500).send('Error cloning repo');
+  const repoPath = path.join(__dirname, 'ipc'); 
+
+  // Check if the repo directory already exists
+  fs.access(repoPath, fs.constants.F_OK, (err) => {
+    if (!err) {
+      console.log('IPC repo already exists. Skipping clone.');
+      return res.send('IPC repo already exists. Skipping clone.');
     }
-    console.log("Cloned the repo");
-    res.send('Cloned the repo');
+
+    // If the directory does not exist, clone the repo
+    console.log(`Cloning IPC repo...`);
+    exec('git clone https://github.com/consensus-shipyard/ipc.git', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error cloning repo: ${error.message}`);
+        return res.status(500).send('Error cloning repo');
+      }
+      console.log("Cloned the repo");
+      res.send('Cloned the repo');
+    });
   });
 });
+
 
 app.get('/generate-contracts', (req, res) => {
   console.log(`generating contracts`);
@@ -56,6 +71,48 @@ app.get('/create-releases', (req, res) => {
     }
     console.log(stdout);
     res.send('Created releases');
+  });
+});
+
+app.get('/ipc-init', (req, res) => {
+  const ipc = "cd ipc && cargo run -q -p ipc-cli --release --";
+  const command = `${ipc} config init`;
+
+  // Run the specified terminal command to get the current working directory
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      return res.status(500).send('Error initializing IPC configuration');
+    }
+  
+    // Determine the home directory 
+    const homeDirectory = require('os').homedir();
+
+    // Construct the path to the IPC configuration file
+    const ipcConfigPath = path.join(homeDirectory, '.ipc', 'config.toml');
+
+    // Define the new configuration content
+    const newConfigContent = `
+keystore_path = "~/.ipc"
+
+# Filecoin Calibration
+[[subnets]]
+id = "/r314159"
+
+[subnets.config]
+network_type = "fevm"
+provider_http = "https://api.calibration.node.glif.io/rpc/v1"
+gateway_addr = "0x1AEe8A878a22280fc2753b3C63571C8F895D2FE3"
+registry_addr = "0x0b4e239FF21b40120cDa817fba77bD1B366c1bcD"
+`;
+
+    // Write the new config to the file
+    fs.writeFile(ipcConfigPath, newConfigContent.trim(), (err) => {
+      if (err) {
+        return res.status(500).send('Error writing new configuration to file');
+      }
+
+      res.send(`Configuration file updated and location: ${ipcConfigPath}`);
+    });
   });
 });
 
@@ -91,35 +148,7 @@ app.get('/generate-public-address', (req, res) => {
   });
 });
 
-// app.post('/create-subnet', (req, res) => {
-//   const { minValidatorStake, minValidators, from } = req.body;
 
-//   const ipc = "cd ipc && cargo run -q -p ipc-cli --release --"
-//   const command = `${ipc}  subnet create --parent /r314159 --min-validator-stake ${minValidatorStake} --min-validators ${minValidators} --bottomup-check-period 300 --from ${from} --permission-mode collateral --supply-source-kind native`;
-
-//   const childProcess = exec(command);
-
-//   childProcess.stdout.on('data', (data) => {
-//     console.log(`stdout: ${data}`);
-//     res.write(`stdout: ${data}\n`);
-//   });
-
-//   childProcess.stderr.on('data', (data) => {
-//     console.error(`stderr: ${data}`);
-//     res.write(`stderr: ${data}\n`);
-//   });
-
-//   childProcess.on('close', (code) => {
-//     console.log(`child process exited with code ${code}`);
-//     if (code === 0) {
-//       res.status(200).end('Subnet creation completed');
-//     } else {
-//       res.status(500).end('Subnet creation failed');
-//     }
-//   });
-
-//   res.status(200).end('Processing your request...');
-// });
 
 app.post('/create-subnet', (req, res) => {
   const { minValidatorStake, minValidators, from } = req.body;
@@ -153,58 +182,116 @@ app.post('/create-subnet', (req, res) => {
   });
 });
 
-
-
-
-  app.get('/configure-and-copy', (req, res) => {
-    const ipc = "cd ipc && cargo run -q -p ipc-cli --release --";
-
-    const command = `${ipc} config init`;
+app.post('/join-subnet', async (req, res) => {
+  const { validatorAddress, subnetAddress, initialBalance } = req.body;
   
-  
-    // Run the specified terminal command
-    exec('pwd', (error, rootDirectory, stderr) => {
+  // Command to get the public key for the validator address
+  const ipc = "cd ipc && cargo run -q -p ipc-cli --release --";
+  const publicKeyCommand = `${ipc} wallet pub-key --wallet-type evm --address ${validatorAddress}`;
+
+  try {
+    const { stdout: publicKey } = await execPromise(publicKeyCommand);
+    // Ensure we got a public key back
+    if (!publicKey) {
+      throw new Error('Failed to retrieve public key.');
+    }
+
+    console.log(publicKey)
+
+    // Now we have the public key, we can attempt to join the subnet
+    const joinSubnetCommand = `${ipc} subnet join --from=${validatorAddress} --subnet=${subnetAddress} --collateral=10 --public-key=${publicKey.trim()} --initial-balance ${initialBalance}`;
+    console.log(joinSubnetCommand)
+    exec(joinSubnetCommand, (error, stdout, stderr) => {
       if (error) {
-        return res.status(500).send('Error getting current directory');
+        console.error(`Error executing command: ${error.message}`);
+        return res.status(500).send('Error executing command');
       }
-  
-        // 2. Determine user's home directory 
-        const homeDirectory = rootDirectory.trim().split('/').slice(0,3).join('/');
-
-        // 3. Construct the path to the IPC configuration file
-        const ipcConfigPath = path.join(
-          homeDirectory, 
-          '.ipc', 
-          'config.toml' 
-        );      
-      exec(command, (error,stdout) => {
-        if (error) {
-          return res.status(500).send('Error initializing IPC configuration');
-        }
-    
-        // 2. Copy the file
-        fs.copyFile(ipcConfigPath, 'config.toml', (err) => {
-          if (err) {
-            return res.status(500).send(`Error copying configuration file ${ipcConfigPath}`);
-          }
-    
-          // 3. Add "hey" to the file
-          fs.appendFile('config.toml', 'hey\n', (err) => {
-            if (err) {
-              return res.status(500).send('Error adding content to configuration file');
-            }
-            console.log(`Generated public address: ${stdout}`);
-            res.send('Configuration file copied, updated, and location: ./config.toml');
-          });
-        });
-      })
       
-      // Log the current output
-      console.log(`Generated public address: ${rootDirectory}`);
+      console.log(`joined subnet: ${stdout}`);
+      res.send(`${stdout}`);
     });
-  
     
+    
+  } catch (error) {
+    console.error('Error joining subnet:', error);
+    res.status(500).send(`Error joining subnet: ${error.message}`);
+  }
+});
+
+
+
+  app.post('/subnet-config', async (req, res) => {
+    const { subnetId, providerHttp } = req.body;
+  
+    // Construct the new subnet configuration content
+    const newSubnetConfig = `
+
+# Subnet template
+[[subnets]]
+id = "${subnetId}"
+  
+[subnets.config]
+network_type = "fevm"
+provider_http = "${providerHttp}"
+gateway_addr = "0x77aa40b105843728088c0132e43fc44348881da8"
+registry_addr = "0x74539671a1d2f1c8f200826baba665179f53a1b7"
+  `;
+  
+    // Determine the home directory
+    const homeDirectory = require('os').homedir();
+  
+    // Construct the path to the IPC configuration file
+    const ipcConfigPath = path.join(homeDirectory, '.ipc', 'config.toml');
+  
+    // Read the current content of the config file and append the new configuration
+    fs.readFile(ipcConfigPath, 'utf8', (err, data) => {
+      if (err) {
+        return res.status(500).send('Error reading configuration file');
+      }
+      
+      // Append the new subnet configuration
+      const updatedConfig = data.trim() + newSubnetConfig;
+      
+      // Write the updated config back to the file
+      fs.writeFile(ipcConfigPath, updatedConfig, 'utf8', (err) => {
+        if (err) {
+          return res.status(500).send('Error writing updated configuration to file');
+        }
+  
+        res.send(`Subnet configuration appended to file at location: ${ipcConfigPath}`);
+      });
+    });
   });
+
+  app.post('/deploy-first-node', async (req, res) => {
+    const { address, subnetId } = req.body;
+    const homeDirectory = require('os').homedir();
+    const privateKeyPath = path.join(homeDirectory, `.ipc/validator_1.sk`);
+    const ipc = "cd ipc && cargo run -q -p ipc-cli --release --";
+    const exportCommand = `${ipc} wallet export --wallet-type evm --address ${address} --hex > ${privateKeyPath}`;
+  
+    try {
+      await execPromise(exportCommand);
+      const nodeCommand = `cargo make --makefile infra/fendermint/Makefile.toml \
+      -e NODE_NAME=validator-${nodeIndex} \
+      -e PRIVATE_KEY_PATH=${privateKeyPath} \
+      -e SUBNET_ID=${subnetId} \
+      -e CMT_P2P_HOST_PORT=26656 -e CMT_RPC_HOST_PORT=26657 -e ETHAPI_HOST_PORT=8545 -e RESOLVER_HOST_PORT=26655 \
+      -e PARENT_GATEWAY=$(curl -s https://raw.githubusercontent.com/consensus-shipyard/ipc/cd/contracts/deployments/r314159.json | jq -r '.gateway_addr') \
+      -e PARENT_REGISTRY=$(curl -s https://raw.githubusercontent.com/consensus-shipyard/ipc/cd/contracts/deployments/r314159.json | jq -r '.registry_addr') \ -e FM_PULL_SKIP=1 \ child-validator
+      `;
+      
+      const { stdout } = await execPromise(nodeCommand);
+      const details = parseNodeOutput(stdout); 
+      const detailsPath = path.join(__dirname, `nodeDetails-${subnetId}.json`);
+      fs.writeFileSync(detailsPath, JSON.stringify(details));
+  
+      res.json(details);
+    } catch (error) {
+      res.status(500).send(`Error deploying first node: ${error.message}`);
+    }
+  });
+  
   
   
   
