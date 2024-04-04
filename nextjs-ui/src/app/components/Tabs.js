@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AddGenerator from './AddGenerator';
 import SubnetCreator from './SubnetCreator';
+import JoinSubnet from "./JoinSubnet"
 
 const Tabs = () => {
   const [activeTab, setActiveTab] = useState('address');
@@ -51,6 +52,14 @@ const Tabs = () => {
         >
           Subnets
         </button>
+        <button
+          className={`px-4 py-2 font-semibold text-white rounded-md ${
+            activeTab === 'join' ? 'bg-purple-700' : 'bg-gray-700 hover:bg-gray-600'
+          }`}
+          onClick={() => setActiveTab('join')}
+        >
+          Join Subnet
+        </button>
       </div>
 
       {/* Note bubble right under the tabs */}
@@ -61,6 +70,7 @@ const Tabs = () => {
       <div className="mt-4">
         {activeTab === 'address' && <AddGenerator />}
         {activeTab === 'subnet' && <SubnetCreator />}
+        {activeTab === 'join' && <JoinSubnet />}
       </div>
     </div>
   );

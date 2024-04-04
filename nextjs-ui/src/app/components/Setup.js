@@ -20,7 +20,7 @@ const Setup = () => {
   };
 
   const startSetupProcess = async () => {
-    await performSetupStep('http://localhost:3100/add-wasm-target', 'Added wasm target', 'Error adding wasm target', 25);
+    await performSetupStep('http://localhost:3100/add-wasm-target', 'Added wasm target', 'Error adding wasm target', 3);
     await performSetupStep('http://localhost:3100/clone-repo', 'Cloned the repo', 'Error cloning repo', 50);
     await performSetupStep('http://localhost:3100/generate-contracts', 'Generated contracts', 'Error generating contracts', 75);
     await performSetupStep('http://localhost:3100/create-releases', 'Created releases', 'Error creating releases', 100);

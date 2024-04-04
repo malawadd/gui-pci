@@ -5,6 +5,9 @@ const PORT = process.env.PORT || 3100;
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const util = require('util');
+const execPromise = util.promisify(require('child_process').exec);
+
 
 app.use(cors());
 app.use(express.json()); // Add this line to parse JSON bodies
@@ -153,6 +156,41 @@ app.post('/create-subnet', (req, res) => {
   });
 });
 
+app.post('/join-subnet', async (req, res) => {
+  const { validatorAddress, subnetAddress, initialBalance } = req.body;
+  
+  // Command to get the public key for the validator address
+  const ipc = "cd ipc && cargo run -q -p ipc-cli --release --";
+  const publicKeyCommand = `${ipc} wallet pub-key --wallet-type evm --address ${validatorAddress}`;
+
+  try {
+    const { stdout: publicKey } = await execPromise(publicKeyCommand);
+    // Ensure we got a public key back
+    if (!publicKey) {
+      throw new Error('Failed to retrieve public key.');
+    }
+
+    console.log(publicKey)
+
+    // Now we have the public key, we can attempt to join the subnet
+    const joinSubnetCommand = `${ipc} subnet join --from=${validatorAddress} --subnet=${subnetAddress} --collateral=10 --public-key=${publicKey.trim()} --initial-balance ${initialBalance}`;
+    console.log(joinSubnetCommand)
+    exec(joinSubnetCommand, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing command: ${error.message}`);
+        return res.status(500).send('Error executing command');
+      }
+      
+      console.log(`joined subnet: ${stdout}`);
+      res.send(`${stdout}`);
+    });
+    
+    
+  } catch (error) {
+    console.error('Error joining subnet:', error);
+    res.status(500).send(`Error joining subnet: ${error.message}`);
+  }
+});
 
 
 

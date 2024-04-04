@@ -3,11 +3,12 @@
 
 import React from 'react';
 import Tabs from './components/Tabs';
+import JoinSubnet from "./components/JoinSubnet"
 
 const DeploymentPage = () => {
   return (
     <div className="container mx-auto">
-      <Tabs />
+      <JoinSubnet />
     </div>
   );
 };
