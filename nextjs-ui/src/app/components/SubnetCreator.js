@@ -18,9 +18,11 @@ const { addressData, subnetData, setSubnetData } = useAddresses();
   const [minValidatorStake, setMinValidatorStake] = useState(1);
   const [minValidators, setMinValidators] = useState(1);
   const [manualSubnetId, setManualSubnetId] = useState(''); // State for manually added subnet ID
-
+  const [joinStatus, setJoinStatus] = useState('');
 
   const createSubnet = async () => {
+    setJoinStatus('creating subnet...');
+    try {
     const response = await fetch('http://localhost:3100/create-subnet', {
       method: 'POST',
       headers: {
@@ -36,9 +38,14 @@ const { addressData, subnetData, setSubnetData } = useAddresses();
     if (response.ok) {
       const subnetId = await response.text();
       setSubnetData([...subnetData, { address: selectedAddress, subnetId }]);
+      setJoinStatus(`Created subnet successfully `);
     } else {
       alert('Failed to create subnet');
+      setJoinStatus(`""`);
     }
+  } catch (error) {
+    setJoinStatus(`Error: ${error.message}`);
+  }
   };
 
   const handleManualAddition = () => {
@@ -52,6 +59,7 @@ const { addressData, subnetData, setSubnetData } = useAddresses();
 
   return (
     <>
+    
         <div className="form-group">
         <label htmlFor="address-select">Address</label>
       <Select
@@ -87,7 +95,7 @@ const { addressData, subnetData, setSubnetData } = useAddresses();
           placeholder="Min Validators"
         />
       </div>
-      <Button onClick={createSubnet}>Create Subnet</Button>
+      <Button onClick={createSubnet}>Create Subnet</Button> {joinStatus && <div className="alert">{joinStatus}</div>}
       
       {/* Input for manual subnet ID addition */}
       

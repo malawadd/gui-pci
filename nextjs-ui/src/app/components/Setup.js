@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button"
+import {SetupMessages} from "./SetupMessages"
 
 const Setup = () => {
   const [progress, setProgress] = useState(0);
@@ -28,12 +29,16 @@ const Setup = () => {
 
   return (
     <div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      <SetupMessages />
       <Button onClick={startSetupProcess}>Start Setup</Button>
       <div className="w-full bg-gray-200">
         <div className="bg-purple-600" style={{ width: `${progress}%` }}>{progress}%</div>
       </div>
       <pre>{status}</pre>
     </div>
+    </div>
+      
   );
 };
 
