@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AddGenerator from './AddGenerator';
 import SubnetCreator from './SubnetCreator';
 import JoinSubnet from "./JoinSubnet"
+import DeploySubnet from "./DeploySubnet"
 
 const Tabs = () => {
   const [activeTab, setActiveTab] = useState('address');
@@ -28,6 +29,8 @@ const Tabs = () => {
           );
       case 'subnet':
         return 'Create subnet by choosing the primary wallet that will connect to the subnet.';
+        case 'join':
+        return 'Choose an address to join a subnet as a validator';
       default:
         return '';
     }
@@ -60,6 +63,14 @@ const Tabs = () => {
         >
           Join Subnet
         </button>
+        <button
+          className={`px-4 py-2 font-semibold text-white rounded-md ${
+            activeTab === 'deploy' ? 'bg-purple-700' : 'bg-gray-700 hover:bg-gray-600'
+          }`}
+          onClick={() => setActiveTab('deploy')}
+        >
+          Deploy Subnet
+        </button>
       </div>
 
       {/* Note bubble right under the tabs */}
@@ -71,6 +82,7 @@ const Tabs = () => {
         {activeTab === 'address' && <AddGenerator />}
         {activeTab === 'subnet' && <SubnetCreator />}
         {activeTab === 'join' && <JoinSubnet />}
+        {activeTab === 'deploy' && <DeploySubnet />}
       </div>
     </div>
   );

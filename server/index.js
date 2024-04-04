@@ -263,6 +263,7 @@ registry_addr = "0x74539671a1d2f1c8f200826baba665179f53a1b7"
     });
   });
 
+ 
   app.post('/deploy-first-node', async (req, res) => {
     const { address, subnetId } = req.body;
     const homeDirectory = require('os').homedir();
@@ -282,7 +283,8 @@ registry_addr = "0x74539671a1d2f1c8f200826baba665179f53a1b7"
       `;
       
       const { stdout } = await execPromise(nodeCommand);
-      const details = parseNodeOutput(stdout); 
+      let formattedOutput = stdout.replace(/'/g, '"');
+      const details = parseNodeOutput(formattedOutput); 
       const detailsPath = path.join(__dirname, `nodeDetails-${subnetId}.json`);
       fs.writeFileSync(detailsPath, JSON.stringify(details));
   
@@ -290,6 +292,26 @@ registry_addr = "0x74539671a1d2f1c8f200826baba665179f53a1b7"
     } catch (error) {
       res.status(500).send(`Error deploying first node: ${error.message}`);
     }
+  });
+  
+  app.get('/mock-deploy-data', (req, res) => {
+    console.log("hmm")
+    exec('node testParseNodeOutput.js', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return res.status(500).send({ error: `exec error: ${error.message}` });
+      }
+      try {
+        let formattedOutput = stdout.replace(/'/g, '"');
+
+        const data = JSON.parse(formattedOutput);
+        console.log(stdout)
+        console.log(data)
+        res.send(data);
+      } catch (parseError) {
+        res.status(500).send({ error: 'Failed to parse mock data' });
+      }
+    });
   });
   
   
