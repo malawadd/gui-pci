@@ -23,7 +23,7 @@ const Sidebar = ({ isVisible, toggleSidebar }) => {
     <div className="h-screen fixed bg-gray-800 shadow-lg w-64">
       <div className="flex flex-col items-center mt-10 mb-10">
         <span className="text-white text-2xl font-semibold">
-          PCI-UI
+          IPC-UI
         </span>
       </div>
       <nav className="flex flex-col space-y-1">
