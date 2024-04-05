@@ -42,6 +42,11 @@ const Sidebar = ({ isVisible, toggleSidebar }) => {
             Management
           </a>
         </Link>
+        <Link legacyBehavior href="/blueprints">
+          <a className={`w-full text-lg rounded-md p-2 hover:bg-gray-700 ${pathname === '/blueprints' ? 'bg-purple-700 text-white' : 'text-gray-400'}`}>
+            Blueprints
+          </a>
+        </Link>
         {toggleButton}
       </nav>
       
