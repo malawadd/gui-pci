@@ -8,6 +8,8 @@ const cors = require('cors');
 const util = require('util');
 const execPromise = util.promisify(require('child_process').exec);
 const { parseNodeOutput } = require('./parseNodeOutput');
+const { copyDir } = require('./fileOperations'); 
+
 
 
 app.use(cors());
@@ -263,7 +265,6 @@ registry_addr = "0x74539671a1d2f1c8f200826baba665179f53a1b7"
     });
   });
 
- 
   app.post('/deploy-first-node', async (req, res) => {
     const { address, subnetId } = req.body;
     const homeDirectory = require('os').homedir();
@@ -314,7 +315,46 @@ registry_addr = "0x74539671a1d2f1c8f200826baba665179f53a1b7"
     });
   });
   
-  
+  app.get('/copy-customcall', async (req, res) => {
+    const sourceDir = path.join(__dirname, 'ipc-custom-kernel');
+    const destinationDir = path.join(__dirname, 'ipc');
+    try {
+        await copyDir(sourceDir, destinationDir);
+        res.send('Files copied successfully.');
+    } catch (error) {
+        console.error('Error copying files:', error);
+        res.status(500).send('Error during copy operation.');
+    }
+});
+
+app.get('/copy-default', async (req, res) => {
+  const sourceDir = path.join(__dirname, 'ipc-default');
+  const destinationDir = path.join(__dirname, 'ipc');
+  try {
+      await copyDir(sourceDir, destinationDir);
+      res.send('Files copied successfully.');
+  } catch (error) {
+      console.error('Error copying files:', error);
+      res.status(500).send('Error during copy operation.');
+  }
+});
+
+app.get('/fendermint-build', (req, res) => {
+
+  exec('cd ipc/fendermint && make docker-build', (error, stdout, stderr) => {
+    if (error) {
+        console.error(`exec error: ${error}`);
+        return res.status(500).send(`Error during command execution: ${error.message}`);
+    }
+    if (stderr) {
+        console.error(`stderr: ${stderr}`);
+        return res.status(500).send(`Shell command stderr: ${stderr}`);
+    }
+    console.log(`stdout: ${stdout}`);
+    res.send(`blueprint Applied successfully: ${stdout}`);
+});
+});
+
   
   
 
