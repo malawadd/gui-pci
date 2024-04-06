@@ -103,8 +103,8 @@ id = "/r314159"
 [subnets.config]
 network_type = "fevm"
 provider_http = "https://api.calibration.node.glif.io/rpc/v1"
-gateway_addr = "0x1AEe8A878a22280fc2753b3C63571C8F895D2FE3"
-registry_addr = "0x0b4e239FF21b40120cDa817fba77bD1B366c1bcD"
+gateway_addr = "0x6d25fbFac9e6215E03C687E54F7c74f489949EaF"
+registry_addr = "0xc938B2B862d4Ef9896E641b3f1269DabFB2D2103"
 `;
 
     // Write the new config to the file
@@ -271,26 +271,31 @@ registry_addr = "0x74539671a1d2f1c8f200826baba665179f53a1b7"
     const privateKeyPath = path.join(homeDirectory, `.ipc/validator_1.sk`);
     const ipc = "cd ipc && cargo run -q -p ipc-cli --release --";
     const exportCommand = `${ipc} wallet export --wallet-type evm --address ${address} --hex > ${privateKeyPath}`;
-  
+    nodeIndex = 1
+    console.log("started deployment")
+    console.log(nodeIndex)
+    console.log(privateKeyPath)
+    console.log(subnetId)
     try {
       await execPromise(exportCommand);
-      const nodeCommand = `cargo make --makefile infra/fendermint/Makefile.toml \
-      -e NODE_NAME=validator-${nodeIndex} \
-      -e PRIVATE_KEY_PATH=${privateKeyPath} \
-      -e SUBNET_ID=${subnetId} \
-      -e CMT_P2P_HOST_PORT=26656 -e CMT_RPC_HOST_PORT=26657 -e ETHAPI_HOST_PORT=8545 -e RESOLVER_HOST_PORT=26655 \
-      -e PARENT_GATEWAY=$(curl -s https://raw.githubusercontent.com/consensus-shipyard/ipc/cd/contracts/deployments/r314159.json | jq -r '.gateway_addr') \
-      -e PARENT_REGISTRY=$(curl -s https://raw.githubusercontent.com/consensus-shipyard/ipc/cd/contracts/deployments/r314159.json | jq -r '.registry_addr') \ -e FM_PULL_SKIP=1 \ child-validator
-      `;
-      
+      const nodeCommand = `cd ipc && cargo make --makefile infra/fendermint/Makefile.toml -e NODE_NAME=validator-${nodeIndex} -e PRIVATE_KEY_PATH=${privateKeyPath} -e SUBNET_ID=${subnetId} -e CMT_P2P_HOST_PORT=26656 -e CMT_RPC_HOST_PORT=26657 -e ETHAPI_HOST_PORT=8545 -e RESOLVER_HOST_PORT=26655 -e PARENT_GATEWAY=$(curl -s https://raw.githubusercontent.com/consensus-shipyard/ipc/cd/contracts/deployments/r314159.json | jq -r '.gateway_addr') -e PARENT_REGISTRY=$(curl -s https://raw.githubusercontent.com/consensus-shipyard/ipc/cd/contracts/deployments/r314159.json | jq -r '.registry_addr') -e FM_PULL_SKIP=1 child-validator`;
+      console.log(nodeCommand)
       const { stdout } = await execPromise(nodeCommand);
-      let formattedOutput = stdout.replace(/'/g, '"');
+      console.log(stdout)
+      let lines = stdout.split('\n');
+
+    lines = lines.filter(line => !line.startsWith('[cargo-make]'));
+
+      let modifiedOutput = lines.join('\n');
+      let formattedOutput = modifiedOutput.replace(/'/g, '"');
       const details = parseNodeOutput(formattedOutput); 
-      const detailsPath = path.join(__dirname, `nodeDetails-${subnetId}.json`);
+      const modifiedString = subnetId.replace('/r314159/', '');
+      const detailsPath = path.join(__dirname, `nodeDetails-${modifiedString}.json`);
       fs.writeFileSync(detailsPath, JSON.stringify(details));
   
       res.json(details);
     } catch (error) {
+      console.log(error)
       res.status(500).send(`Error deploying first node: ${error.message}`);
     }
   });
