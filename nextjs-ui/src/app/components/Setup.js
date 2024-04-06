@@ -25,11 +25,11 @@ const Setup = () => {
 
   const startSetupProcess = async () => {
     setIsProcessing(true); // Indicate the process has started
-    // Example setup steps, adjust according to your actual setup steps
-    await performSetupStep('http://localhost:3100/add-wasm-target', 'Adding wasm target', 'Added wasm target', 'Error adding wasm target', 25);
-    await performSetupStep('http://localhost:3100/clone-repo', 'Clonning the repo', 'Cloned the repo', 'Error cloning repo', 50);
+    await performSetupStep('http://localhost:3100/add-wasm-target', 'Adding wasm target', 'Added wasm target', 'Error adding wasm target', 3);
+    await performSetupStep('http://localhost:3100/clone-repo', 'Clonning the repo', 'Cloned the repo', 'Error cloning repo', 20);
     await performSetupStep('http://localhost:3100/generate-contracts', 'Generating contracts', 'Generated contracts', 'Error generating contracts', 75);
-    await performSetupStep('http://localhost:3100/create-releases', 'Creating releases', 'Created releases', 'Error creating releases', 100);
+    await performSetupStep('http://localhost:3100/create-releases', 'Creating releases', 'Created releases', 'Error creating releases', 99);
+    await performSetupStep('http://localhost:3100/ipc-init','Initializing IPC configuration', 'IPC configuration initialized','Error initializing IPC configuration', 100);
     setIsProcessing(false); // Process has ended
   };
 
