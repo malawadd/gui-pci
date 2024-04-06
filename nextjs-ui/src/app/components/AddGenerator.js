@@ -19,9 +19,11 @@ const AddGenerator = () => {
   const { addressData, setAddressData } = useAddresses();
   const [publicKeyCache, setPublicKeyCache] = useState({});
   const [newAddress, setNewAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+
 
   const generateAddress = async () => {
-    // if (addresses.length >= 10) return; // Limit to 3 addresses
+    setLoading(true);
 
     const response = await fetch('http://localhost:3100/generate-eth-address');
     const  addressWithQuotes  = await response.text();
@@ -32,6 +34,7 @@ const AddGenerator = () => {
         ...addressData, 
         { address, publicKey: null } // Add address with empty key placeholder 
       ]);
+      setLoading(false);
 
   };
 
@@ -80,7 +83,9 @@ const togglePublicKey = async (address) => {
 
   return (
     <>
-    <Button onClick={generateAddress}>Generate Address</Button>
+    <Button onClick={generateAddress} disabled={loading} > 
+    {loading ? 'Generating Address...' : 'Generate Address'}
+    </Button>
     <div className="flex w-full max-w-sm items-center space-x-2">
     <Input
           type="text"
