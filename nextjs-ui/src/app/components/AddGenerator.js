@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import {  List, ListItem } from './CustomList';
 import {
@@ -20,6 +20,16 @@ const AddGenerator = () => {
   const [publicKeyCache, setPublicKeyCache] = useState({});
   const [newAddress, setNewAddress] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      const response = await fetch('http://localhost:3100/addresses-get');
+      const addresses = await response.json();
+      setAddressData(addresses.map(({ address }) => ({ address, publicKey: null })));
+    };
+
+    fetchAddresses();
+  }, []);
 
 
   const generateAddress = async () => {

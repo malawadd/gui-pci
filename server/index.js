@@ -9,7 +9,7 @@ const util = require('util');
 const execPromise = util.promisify(require('child_process').exec);
 const { parseNodeOutput } = require('./parseNodeOutput');
 const { copyDir } = require('./fileOperations'); 
-
+const { readAddresses, writeAddresses } = require('./util'); 
 
 
 app.use(cors());
@@ -128,6 +128,12 @@ app.get('/generate-eth-address', (req, res) => {
       console.error(`Error executing command: ${error.message}`);
       return res.status(500).send('Error executing command');
     }
+    console.log(`Generated Ethereum address: ${stdout}`);
+    const data = readAddresses();
+    const trimmedAddress = stdout.trim();
+    const address = trimmedAddress.replace(/^"|"$/g, '');
+    data.push({address});
+    writeAddresses(data);
     console.log(`Generated Ethereum address: ${stdout}`);
     res.send(stdout);
   });
@@ -359,6 +365,19 @@ app.get('/fendermint-build', (req, res) => {
     res.send(`blueprint Applied successfully: ${stdout}`);
 });
 });
+
+// GET API Endpoint to Retrieve Addresses
+app.get('/addresses-get', (req, res) => {
+  try {
+    const data = readAddresses();
+    res.json(data);
+  } catch (error) {
+    console.error(`Error reading addresses file: ${error.message}`);
+    res.status(500).send('Error reading addresses file');
+  }
+});
+
+
 
   
   
